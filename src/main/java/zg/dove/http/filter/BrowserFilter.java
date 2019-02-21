@@ -2,12 +2,11 @@ package zg.dove.http.filter;
 
 import zg.dove.filter.IFilter;
 import zg.dove.http.HttpRequest;
-import zg.dove.net.NetChannel;
 
 public class BrowserFilter implements IFilter {
 
     @Override
-    public Object onFilterIn(NetChannel ch, Object msg) {
+    public Object onFilterIn(Object context, Object msg) {
         HttpRequest request = (HttpRequest) msg;
         //去除浏览器"/favicon.ico"的干扰
         if(request.uri().equals("/favicon.ico")){
@@ -17,12 +16,12 @@ public class BrowserFilter implements IFilter {
     }
 
     @Override
-    public Object onFilterOut(NetChannel ch, Object msg) {
+    public Object onFilterOut(Object context, Object msg) {
         return msg;
     }
 
     @Override
-    public Throwable onFilterException(NetChannel ch, Throwable t) {
+    public Throwable onFilterException(Object context, Throwable t) {
         return null;
     }
 }

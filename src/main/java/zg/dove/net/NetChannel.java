@@ -5,75 +5,56 @@ import io.netty.channel.*;
 import java.net.InetSocketAddress;
 
 public class NetChannel {
-    private ChannelHandlerContext channelHandlerContext;
-    private NetSessionContext netSessionContext;
 
-    public NetChannel() {
-        this.netSessionContext = new NetSessionContext();
+    public static boolean isActive(Object channelHandlerContext) {
+        return channelHandlerContext != null && ((ChannelHandlerContext)channelHandlerContext).channel().isActive();
     }
 
-    public ChannelHandlerContext getChannelHandlerContext() {
-        return channelHandlerContext;
-    }
-    public void setChannelHandlerContext(ChannelHandlerContext channelHandlerContext) {
-        this.channelHandlerContext = channelHandlerContext;
-    }
-
-    public NetSessionContext getNetSessionContext() {
-        return netSessionContext;
-    }
-    public void setNetSessionContext(NetSessionContext netSessionContext) {
-        this.netSessionContext = netSessionContext;
-    }
-
-    public boolean isActive() {
-        return channelHandlerContext != null && channelHandlerContext.channel().isActive();
-    }
-
-    public ChannelFuture write(Object msg) throws Exception {
-        ChannelPromise future = channelHandlerContext.newPromise();
-        channelHandlerContext.handler().write(channelHandlerContext, msg, future);
+    public static ChannelFuture write(Object channelHandlerContext, Object msg) throws Exception {
+        ChannelHandlerContext context = ((ChannelHandlerContext)channelHandlerContext);
+        ChannelPromise future = context.newPromise();
+        context.handler().write(context, msg, future);
         future.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
         return future;
     }
 
-    public ChannelFuture writeAndFlush(Object msg) throws Exception {
-        ChannelPromise future = channelHandlerContext.newPromise();
-        channelHandlerContext.handler().write(channelHandlerContext, msg, future);
-        channelHandlerContext.handler().flush(channelHandlerContext);
+    public static ChannelFuture writeAndFlush(Object channelHandlerContext, Object msg) throws Exception {
+        ChannelHandlerContext context = ((ChannelHandlerContext)channelHandlerContext);
+        ChannelPromise future = context.newPromise();
+        context.handler().write(context, msg, future);
+        context.handler().flush(context);
         future.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+        future.addListener(ChannelFutureListener.CLOSE);
         return future;
     }
 
-    public void flush() throws Exception {
-        channelHandlerContext.handler().flush(channelHandlerContext);
+    public static void flush(Object channelHandlerContext) throws Exception {
+        ChannelHandlerContext context = ((ChannelHandlerContext)channelHandlerContext);
+        context.handler().flush(context);
     }
 
-    public void close() throws Exception {
-        channelHandlerContext.handler().close(channelHandlerContext, channelHandlerContext.newPromise());
+    public static void close(Object channelHandlerContext) throws Exception {
+        ChannelHandlerContext context = ((ChannelHandlerContext)channelHandlerContext);
+        context.handler().close(context, context.newPromise());
     }
 
-    public boolean isInEventLoop() {
-        return this.channelHandlerContext.executor().inEventLoop();
+    public static boolean isInEventLoop(Object channelHandlerContext) {
+        return ((ChannelHandlerContext)channelHandlerContext).executor().inEventLoop();
     }
 
     /*
      * 获取对端地址
      * @return
      */
-    public InetSocketAddress remoteAddress() {
-        return (InetSocketAddress) channelHandlerContext.channel().remoteAddress();
+    public static InetSocketAddress remoteAddress(Object channelHandlerContext) {
+        return (InetSocketAddress) ((ChannelHandlerContext)channelHandlerContext).channel().remoteAddress();
     }
 
     /*
      * 获取本端地址
      * @return
      */
-    public InetSocketAddress localAddress() {
-        return (InetSocketAddress) channelHandlerContext.channel().localAddress();
-    }
-
-    public Channel channel() {
-        return channelHandlerContext.channel();
+    public static InetSocketAddress localAddress(Object channelHandlerContext) {
+        return (InetSocketAddress) ((ChannelHandlerContext)channelHandlerContext).channel().localAddress();
     }
 }

@@ -1,5 +1,9 @@
 package zg.dove.net;
 
+import io.netty.util.Attribute;
+import io.netty.util.AttributeKey;
+import io.netty.util.AttributeMap;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -9,85 +13,61 @@ public class NetSessionContext {
     // 每请求属性
     public static final String SCOPE_REQUEST = "_scope.request";
 
-    private Map<String, Map<Object, Object>> scopeAttributes = new HashMap<>();
-
 
     // 获取顺序为 其它scope -> SCOPE_REQUEST -> SCOPE_SESSION
-    public Object getAttribute(Object key) {
-        return doGetAttribute(key);
+    public static Object getAttribute(Object scopeAttributes, Object key) {
+        return doGetAttribute(scopeAttributes, key);
     }
 
-    private Object doGetAttribute(Object key) {
-        Object value;
-        Map<Object, Object> attributes;
-
-        Map<Object, Object> sessionAttributes = null;
-        Map<Object, Object> requestAttributes = null;
-        for (Map.Entry<String, Map<Object, Object>> iter : scopeAttributes.entrySet()) {
-            if (iter.getKey().equals(SCOPE_REQUEST)) {
-                requestAttributes = iter.getValue();
-                continue;
-            }
-            if (iter.getKey().equals(SCOPE_SESSION)) {
-                sessionAttributes = iter.getValue();
-                continue;
-            }
-
-            attributes = iter.getValue();
-            value = attributes.get(key);
-            if (value != null) {
-                return value;
-            }
-        }
+    private static Object doGetAttribute(Object scopeAttributes, Object key) {
+        Object sessionAttributes = ((AttributeMap)scopeAttributes).attr(AttributeKey.valueOf(SCOPE_REQUEST)).get();
+        Object requestAttributes = ((AttributeMap)scopeAttributes).attr(AttributeKey.valueOf(SCOPE_SESSION)).get();
 
         if (requestAttributes != null) {
-            value = requestAttributes.get(key);
-            if (value != null) {
-                return value;
-            }
+            return ((Map<Object, Object>)requestAttributes).get(key);
         }
 
         if (sessionAttributes != null) {
-            value = sessionAttributes.get(key);
-            if (value != null) {
-                return value;
-            }
+            return ((Map<Object, Object>)sessionAttributes).get(key);
+
         }
 
         return null;
     }
 
-    public Object getAttribute(String scope, Object key) {
-        Map<Object, Object> attributes = scopeAttributes.get(scope);
+    public static Object getAttribute(Object scopeAttributes, String scope, Object key) {
+        Object attributes = ((AttributeMap)scopeAttributes).attr(AttributeKey.valueOf(scope)).get();
         if (attributes == null) {
             return null;
         }
-        return attributes.get(key);
+        return ((Map<Object, Object>)attributes).get(key);
     }
 
-    public Map<Object, Object> removeAttribute(String scope) {
-        return scopeAttributes.remove(scope);
+    public static Map<Object, Object> removeAttribute(Object scopeAttributes, String scope) {
+        Object attributes = ((AttributeMap)scopeAttributes).attr(AttributeKey.valueOf(scope)).getAndRemove();
+//        if (attributes == null) {
+//            return null;
+//        }
+        return (Map<Object, Object>)attributes;
     }
 
-    public Object removeAttribute(String scope, Object key) {
-        Map<Object, Object> attributes = scopeAttributes.get(scope);
+    public static Object removeAttribute(Object scopeAttributes, String scope, Object key) {
+        Object attributes = ((AttributeMap)scopeAttributes).attr(AttributeKey.valueOf(scope)).get();
         if (attributes == null) {
             return null;
         }
-        Object value = attributes.remove(key);
-        if (attributes.isEmpty()) {
-            scopeAttributes.remove(scope);
-        }
+        Object value = ((Map<Object, Object>)attributes).remove(key);
         return value;
     }
 
-    public Object putAttribute(String scope, Object key, Object value) {
-        Map<Object, Object> attributes = scopeAttributes.get(scope);
+    public static Object putAttribute(Object scopeAttributes, String scope, Object key, Object value) {
+        Attribute<Object> _attributes = ((AttributeMap)scopeAttributes).attr(AttributeKey.valueOf(scope));
+        Object attributes = _attributes.get();
         if (attributes == null) {
             attributes = new HashMap<>();
-            scopeAttributes.put(scope, attributes);
+            _attributes.set(attributes);
         }
-        return attributes.put(key, value);
+        return ((Map<Object, Object>)attributes).put(key, value);
     }
 }
 

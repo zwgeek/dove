@@ -10,24 +10,23 @@ import zg.dove.route.IRoute;
 
 public class HttpStatusFilter implements IFilter {
     @Override
-    public Object onFilterIn(NetChannel ch, Object msg) {
+    public Object onFilterIn(Object context, Object msg) {
         return msg;
     }
 
     @Override
-    public Object onFilterOut(NetChannel ch, Object msg) {
+    public Object onFilterOut(Object context, Object msg) {
         return msg;
     }
 
     @Override
-    public Throwable onFilterException(NetChannel ch, Throwable t) {
+    public Throwable onFilterException(Object context, Throwable t) {
         if (t instanceof HttpException) {
-            NetSessionContext netSessionContext = ch.getNetSessionContext();
-            HttpResponse response = (HttpResponse)netSessionContext.getAttribute(NetSessionContext.SCOPE_REQUEST, HttpResponse.class);
+            HttpResponse response = (HttpResponse)NetSessionContext.getAttribute(context, NetSessionContext.SCOPE_REQUEST, HttpResponse.class);
             if (t.getCause() instanceof IRoute.NoRouteToLogicException) {
                 response.setStatus(HttpResponseStatus.NOT_FOUND.code());
                 try {
-                    ch.writeAndFlush(response);
+                    NetChannel.writeAndFlush(context, response);
                 } catch (Exception e) {
                     return e;
                 }

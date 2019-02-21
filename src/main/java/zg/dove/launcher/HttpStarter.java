@@ -16,13 +16,7 @@ import java.lang.reflect.Modifier;
 import java.util.Properties;
 
 public class HttpStarter extends Starter {
-    public static HttpChannelAction initAction() {
-        IFilter filter = new DupFilter();
-        HttpChannelHandler.setFilter(filter);
-
-        IRoute route = new DefaultRoute();
-        HttpChannelHandler.setRoute(route);
-
+    public static HttpChannelAction initAction(IFilter filter, IRoute route) {
         HttpChannelAction action = new HttpChannelAction();
         action.initFilter(filter);
         action.initRoute(route, true, true, null);
@@ -31,8 +25,8 @@ public class HttpStarter extends Starter {
         return action;
     }
 
-    public static NetStream initStream() {
-        HttpChannelInitializer httpChannelInitializer = new HttpChannelInitializer();
+    public static NetStream initStream(IFilter filter, IRoute route) {
+        HttpChannelInitializer httpChannelInitializer = new HttpChannelInitializer(filter, route);
         NetStream stream = new NetStream(httpChannelInitializer, (NioEventLoopGroup)Starter.eventLoopGroup);
 
         HttpClient.setStream(stream);
@@ -45,7 +39,10 @@ public class HttpStarter extends Starter {
         Assert.verify(properties.getProperty("http.addr.port") != null);
         Assert.verify(properties.getProperty("http.work.thread") != null);
 
-        HttpChannelAction action = HttpStarter.initAction();
+        IFilter filter = new DupFilter();
+        IRoute route = new DefaultRoute();
+
+        HttpChannelAction action = HttpStarter.initAction(filter, route);
 
         if (properties.getProperty("http.work.cost") != null) {
             action.addFilter(new CostFilter());
@@ -66,7 +63,7 @@ public class HttpStarter extends Starter {
             }
         }
         Starter.eventLoopGroup = new NioEventLoopGroup(Integer.valueOf(properties.getProperty("http.work.thread")));
-        HttpStarter.initStream().listen(properties.getProperty("http.addr.ip"), Integer.valueOf(properties.getProperty("http.addr.port")));
+        HttpStarter.initStream(filter, route).listen(properties.getProperty("http.addr.ip"), Integer.valueOf(properties.getProperty("http.addr.port")));
     }
 
     @Override

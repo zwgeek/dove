@@ -1,28 +1,27 @@
 package zg.dove.filter;
 
-import zg.dove.net.NetChannel;
 
 public interface IFilter<I, O> {
     /**
      * 输入过滤, 传递过滤后的数据
-     * @param ch
+     * @param context, 跟NetChannel配合使用
      * @param msg
      * @return
      */
-    I onFilterIn(NetChannel ch, I msg);
+    I onFilterIn(Object context, I msg);
 
     /**
      * 输出过滤, 传递过滤后的数据
-     * @param ch
+     * @param context, 跟NetChannel配合使用
      * @param msg
      * @return
      */
-    O onFilterOut(NetChannel ch, O msg);
+    O onFilterOut(Object context, O msg);
 
     /**
      * 异常过滤, 处理异常链
-     * @param ch
-     * @param e
+     * @param context, 跟NetChannel配合使用
+     * @param t
      */
-    Throwable onFilterException(NetChannel ch, Throwable t);
+    Throwable onFilterException(Object context, Throwable t);
 }

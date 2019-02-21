@@ -4,6 +4,8 @@ import io.netty.channel.*;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.timeout.IdleStateHandler;
+import zg.dove.filter.IFilter;
+import zg.dove.route.IRoute;
 
 /**
  * http1.1 初始化
@@ -12,7 +14,10 @@ import io.netty.handler.timeout.IdleStateHandler;
  */
 public class HttpChannelInitializer extends ChannelInitializer {
 
-    public HttpChannelInitializer() {
+    private final HttpChannelHandler httpChannelHandler;
+
+    public HttpChannelInitializer(IFilter filter, IRoute route) {
+        this.httpChannelHandler = new HttpChannelHandler(filter, route);
     }
 
     @Override
@@ -22,6 +27,6 @@ public class HttpChannelInitializer extends ChannelInitializer {
                         HttpChannelConfig.ALL_IDLE_TIME))
                 .addLast("codec", new HttpServerCodec())
                 .addLast("aggregator", new HttpObjectAggregator(HttpChannelConfig.MAX_CONTENT_LENGTH))
-                .addLast("channel", new HttpChannelHandler());
+                .addLast("channel", this.httpChannelHandler);
     }
 }

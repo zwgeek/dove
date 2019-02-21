@@ -3,6 +3,8 @@ package zg.dove.http;
 import io.netty.channel.Channel;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
+import zg.dove.filter.IFilter;
+import zg.dove.route.IRoute;
 
 /**
  * http1.1 ssl初始化
@@ -11,8 +13,8 @@ import io.netty.handler.ssl.util.SelfSignedCertificate;
  */
 public class HttpsChannelInitializer extends HttpChannelInitializer {
 
-    public HttpsChannelInitializer() {
-        super();
+    public HttpsChannelInitializer(IFilter filter, IRoute route) {
+        super(filter, route);
     }
 
     @Override

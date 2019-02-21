@@ -2,33 +2,26 @@ package zg.dove.filter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import zg.dove.http.HttpRequest;
-import zg.dove.net.NetChannel;
+import zg.dove.net.NetSessionContext;
 
 public class CostFilter implements IFilter {
     public static final Logger logger = LogManager.getLogger(CostFilter.class);
-    private String name;
-    private long basetime;
 
     @Override
-    public Object onFilterIn(NetChannel ch, Object msg) {
-        if (msg instanceof HttpRequest) {
-            name = ((HttpRequest) msg).method() + ' ' + ((HttpRequest) msg).uri();
-        } else {
-            name = msg.getClass().getName();
-        }
-        basetime = System.currentTimeMillis();
+    public Object onFilterIn(Object context, Object msg) {
+        NetSessionContext.putAttribute(context, NetSessionContext.SCOPE_REQUEST, "CostTime", System.currentTimeMillis());
         return msg;
     }
 
     @Override
-    public Object onFilterOut(NetChannel ch, Object msg) {
-        logger.debug("[msg cost time] => {} : {} ms", name, System.currentTimeMillis() - basetime);
+    public Object onFilterOut(Object context, Object msg) {
+        Long time = (Long)NetSessionContext.getAttribute(context, NetSessionContext.SCOPE_REQUEST, "CostTime");
+        logger.debug("[msg cost time] => {} : {} ms", msg, System.currentTimeMillis() - time);
         return msg;
     }
 
     @Override
-    public Throwable onFilterException(NetChannel ch, Throwable t) {
+    public Throwable onFilterException(Object context, Throwable t) {
         return t;
     }
 }

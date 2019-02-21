@@ -1,7 +1,5 @@
 package zg.dove.filter;
 
-import zg.dove.net.NetChannel;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,9 +15,9 @@ public class DupFilter implements IFilter<Object, Object> {
     }
 
     @Override
-    public Object onFilterIn(NetChannel ch, Object msg) {
+    public Object onFilterIn(Object context, Object msg) {
         for (IFilter<Object, Object> filter : filters) {
-            msg = filter.onFilterIn(ch, msg);
+            msg = filter.onFilterIn(context, msg);
             if (msg == null) {
                 break;
             }
@@ -28,10 +26,10 @@ public class DupFilter implements IFilter<Object, Object> {
     }
 
     @Override
-    public Object onFilterOut(NetChannel ch, Object msg) {
+    public Object onFilterOut(Object context, Object msg) {
         for (int i = filters.size() - 1; i >= 0; i--) {
             IFilter<Object, Object> filter = filters.get(i);
-            msg = filter.onFilterOut(ch, msg);
+            msg = filter.onFilterOut(context, msg);
             if (msg == null) {
                 break;
             }
@@ -40,10 +38,10 @@ public class DupFilter implements IFilter<Object, Object> {
     }
 
     @Override
-    public Throwable onFilterException(NetChannel ch, Throwable t) {
+    public Throwable onFilterException(Object context, Throwable t) {
         for (int i = filters.size() - 1; i >= 0; i--) {
             IFilter<Object, Object> filter = filters.get(i);
-            t = filter.onFilterException(ch, t);
+            t = filter.onFilterException(context, t);
             if (t == null) {
                 break;
             }

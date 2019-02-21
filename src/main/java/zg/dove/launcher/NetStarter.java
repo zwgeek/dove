@@ -28,8 +28,8 @@ public class NetStarter extends Starter {
         return action;
     }
 
-    public static NetStream initStream() {
-        NetChannelInitializer netChannelInitializer = new NetChannelInitializer();
+    public static NetStream initStream(IFilter filter, IRoute route) {
+        NetChannelInitializer netChannelInitializer = new NetChannelInitializer(filter, route);
         NetStream stream = new NetStream(netChannelInitializer, (NioEventLoopGroup)Starter.eventLoopGroup);
 
         NetClient.setStream(stream);
@@ -51,11 +51,9 @@ public class NetStarter extends Starter {
 
         clz = Class.forName(properties.getProperty("net.work.filter"));
         IFilter filter = (IFilter)clz.getDeclaredConstructor().newInstance();
-        NetChannelHandler.setFilter(filter);
 
         clz = Class.forName(properties.getProperty("net.work.route"));
         IRoute route = (IRoute)clz.getDeclaredConstructor().newInstance();
-        NetChannelHandler.setRoute(route);
 
         NetChannelAction action = NetStarter.initAction(filter, route);
 
@@ -74,7 +72,7 @@ public class NetStarter extends Starter {
         }
 
         Starter.eventLoopGroup = new NioEventLoopGroup(Integer.valueOf(properties.getProperty("net.work.thread")));
-        NetStarter.initStream().listen(properties.getProperty("net.addr.ip"), Integer.valueOf(properties.getProperty("net.addr.port")));
+        NetStarter.initStream(filter, route).listen(properties.getProperty("net.addr.ip"), Integer.valueOf(properties.getProperty("net.addr.port")));
     }
 
     @Override

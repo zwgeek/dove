@@ -1,16 +1,20 @@
 package zg.dove.http;
 
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.*;
+import zg.dove.filter.IFilter;
 import zg.dove.net.NetChannelHandler;
 import zg.dove.net.NetSessionContext;
+import zg.dove.route.IRoute;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+@ChannelHandler.Sharable
 public class HttpChannelHandler extends NetChannelHandler {
     private static final String PATH = "html";
     private static Map<String, String> CONTENT_TYPES = new HashMap<>();
@@ -89,8 +93,8 @@ public class HttpChannelHandler extends NetChannelHandler {
 
     }
 
-    public HttpChannelHandler() {
-        super();
+    public HttpChannelHandler(IFilter filter, IRoute route) {
+        super(filter, route);
     }
 
     private HttpResponse _createResponse() {
@@ -106,12 +110,12 @@ public class HttpChannelHandler extends NetChannelHandler {
     protected Object _channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (!(msg instanceof FullHttpRequest)) {
             // NOTICE:为了实现上简单，我们现在只考虑整包的处理
-            return this._channelRead0(msg);
+            return this._channelRead0(ctx, msg);
         }
 
         HttpResponse response = this._createResponse();
-        netChannel.getNetSessionContext().removeAttribute(NetSessionContext.SCOPE_REQUEST);
-        netChannel.getNetSessionContext().putAttribute(NetSessionContext.SCOPE_REQUEST, HttpResponse.class, response);
+        NetSessionContext.removeAttribute(ctx, NetSessionContext.SCOPE_REQUEST);
+        NetSessionContext.putAttribute(ctx, NetSessionContext.SCOPE_REQUEST, HttpResponse.class, response);
 
         HttpRequest request = new HttpRequest(((FullHttpRequest)msg));
         if (!request.method().equals(HttpMethod.GET)) {
@@ -141,34 +145,34 @@ public class HttpChannelHandler extends NetChannelHandler {
         return null;
     }
 
-    private Object _channelRead0(Object msg) throws Exception {
+    private Object _channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (!(msg instanceof FullHttpResponse)) {
             throw new RuntimeException("not support " + msg.getClass().getName());
         }
 
         HttpResponse response = new HttpResponse((FullHttpResponse)msg);
-        netChannel.getNetSessionContext().putAttribute(NetSessionContext.SCOPE_REQUEST, HttpResponse.class, response);
+        NetSessionContext.putAttribute(ctx, NetSessionContext.SCOPE_REQUEST, HttpResponse.class, response);
 
-        HttpRequest request = (HttpRequest)netChannel.getNetSessionContext().getAttribute(HttpRequest.class);
+        HttpRequest request = (HttpRequest)NetSessionContext.getAttribute(ctx, HttpRequest.class);
         return request;
     }
 
     @Override
     protected Object _write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         if (!(msg instanceof HttpResponse)) {
-            return this._write0(msg);
+            return this._write0(ctx, msg);
         }
 
         ((HttpResponse)msg).setHeader(HttpHeaderNames.CONTENT_LENGTH, String.valueOf(((HttpResponse)msg).size()));
         return ((HttpResponse)msg).getResponse();
     }
 
-    private Object _write0(Object msg) throws Exception {
+    private Object _write0(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (!(msg instanceof HttpRequest)) {
             throw new RuntimeException("not support " + msg.getClass().getName());
         }
 
-        netChannel.getNetSessionContext().putAttribute(NetSessionContext.SCOPE_REQUEST, HttpRequest.class, msg);
+        NetSessionContext.putAttribute(ctx, NetSessionContext.SCOPE_REQUEST, HttpRequest.class, msg);
         return ((HttpRequest)msg).getRequest();
     }
 }

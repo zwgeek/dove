@@ -37,18 +37,15 @@ public class HttpChannelAction extends NetChannelAction {
         methodRoutes.put(BeanHttp.Method.CONNECT, new RefRoute());
 
         this.route.register(NetEvent.DATA, (from, key, msg) -> {
-            NetChannel netChannel = (NetChannel)from;
-            NetSessionContext netSessionContext = netChannel.getNetSessionContext();
-
             HttpRequest request = (HttpRequest)msg;
             RefRoute _route = methodRoutes.get(request.method());
-            HttpResponse response = (HttpResponse)netSessionContext.getAttribute(NetSessionContext.SCOPE_REQUEST, HttpResponse.class);
-            //netSessionContext.putAttribute(NetSessionContext.SCOPE_REQUEST, msg.getClass(), msg);
+            HttpResponse response = (HttpResponse)NetSessionContext.getAttribute(from, NetSessionContext.SCOPE_REQUEST, HttpResponse.class);
+            //NetSessionContext.putAttribute(from, NetSessionContext.SCOPE_REQUEST, msg.getClass(), msg);
 
             try {
                 boolean bool = _route.trigger(from, request.uri(), msg, response);
                 if (bool) {
-                    netChannel.writeAndFlush(response);
+                    NetChannel.writeAndFlush(from, response);
                 }
             } catch (Exception e) {
                 logger.error("http msg event exception", e);

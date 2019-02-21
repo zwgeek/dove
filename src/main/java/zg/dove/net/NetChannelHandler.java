@@ -1,5 +1,6 @@
 package zg.dove.net;
 
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
@@ -7,35 +8,23 @@ import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.ReferenceCountUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import zg.dove.filter.DupFilter;
 import zg.dove.filter.IFilter;
-import zg.dove.route.DefaultRoute;
 import zg.dove.route.IRoute;
 
+@ChannelHandler.Sharable
 public class NetChannelHandler extends ChannelHandlerAdapter {
     public static final Logger logger = LogManager.getLogger(NetChannelHandler.class);
-    private static IFilter filter = new DupFilter();
-    private static IRoute route = new DefaultRoute();
+    private IFilter filter;
+    private IRoute route;
 
-    protected NetChannel netChannel;
-
-    public NetChannelHandler() {
-        this.netChannel = new NetChannel();
-    }
-
-    public static void setFilter(IFilter filter) {
-        NetChannelHandler.filter = filter;
-    }
-
-    public static void setRoute(IRoute route) {
-        NetChannelHandler.route = route;
+    public NetChannelHandler(IFilter filter, IRoute route) {
+        this.filter= filter;
+        this.route = route;
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        logger.debug("channel active {}->{}", ctx.channel().remoteAddress(), ctx.channel().localAddress());
-        netChannel.setChannelHandlerContext(ctx);
-        route.trigger(netChannel, NetEvent.CONNECTED, null);
+        route.trigger(ctx, NetEvent.CONNECTED, null);
         ctx.fireChannelActive();
     }
 
@@ -46,21 +35,20 @@ public class NetChannelHandler extends ChannelHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        logger.debug("recv msg:{}", msg.getClass().getName());
-
         Object _msg = this._channelRead(ctx, msg);
         if (_msg != null) {
             if (filter != null) {
-                _msg = filter.onFilterIn(netChannel, _msg);
+                _msg = filter.onFilterIn(ctx, _msg);
                 if (_msg == null) {
-                    logger.debug("msg filtered:{}", msg.getClass().getName());
+                    logger.debug("msg filtered : {}", msg);
                     ReferenceCountUtil.release(msg);
                     return;
                 }
             }
-            route.trigger(netChannel, NetEvent.DATA_PROCESS_BEFORE, _msg);
-            route.trigger(netChannel, NetEvent.DATA, _msg);
-            route.trigger(netChannel, NetEvent.DATA_PROCESS_AFTER, _msg);
+            logger.debug("recv msg : {}", msg);
+            route.trigger(ctx, NetEvent.DATA_PROCESS_BEFORE, _msg);
+            route.trigger(ctx, NetEvent.DATA, _msg);
+            route.trigger(ctx, NetEvent.DATA_PROCESS_AFTER, _msg);
         }
 
         ReferenceCountUtil.release(msg);
@@ -72,12 +60,11 @@ public class NetChannelHandler extends ChannelHandlerAdapter {
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-        logger.debug("send msg:{}", msg.getClass().getName());
         if (filter != null) {
             Object _msg = msg;
-            msg = filter.onFilterOut(netChannel, msg);
+            msg = filter.onFilterOut(ctx, msg);
             if (msg == null) {
-                logger.debug("msg filtered:{}", _msg.getClass().getName());
+                logger.debug("msg filtered : {}", _msg);
                 return;
             }
         }
@@ -87,6 +74,7 @@ public class NetChannelHandler extends ChannelHandlerAdapter {
             return;
         }
 
+        logger.debug("send msg : {}", msg);
         super.write(ctx, msg, promise);
     }
 
@@ -97,13 +85,13 @@ public class NetChannelHandler extends ChannelHandlerAdapter {
             IdleStateEvent idleStateEvent = (IdleStateEvent) evt;
             switch (idleStateEvent.state()) {
                 case READER_IDLE:
-                    route.trigger(netChannel, NetEvent.READ_IDLE_TIMEOUT, null);
+                    route.trigger(ctx, NetEvent.READ_IDLE_TIMEOUT, null);
                     break;
                 case WRITER_IDLE:
-                    route.trigger(netChannel, NetEvent.WRITE_IDLE_TIMEOUT, null);
+                    route.trigger(ctx, NetEvent.WRITE_IDLE_TIMEOUT, null);
                     break;
                 case ALL_IDLE:
-                    route.trigger(netChannel, NetEvent.ALL_IDLE_TIMEOUT, null);
+                    route.trigger(ctx, NetEvent.ALL_IDLE_TIMEOUT, null);
                     break;
                 default:
                     logger.warn("unknown event {}:{}", evt.getClass().getName(), evt);
@@ -121,32 +109,32 @@ public class NetChannelHandler extends ChannelHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.warn("exception caught {}", cause.getMessage());
+        logger.warn("exception caught ", cause);
         if (filter != null) {
             Object _cause = cause;
-            cause = filter.onFilterException(netChannel, cause);
+            cause = filter.onFilterException(ctx, cause);
             if (cause == null) {
                 logger.debug("msg filtered:{}", _cause.getClass().getName());
                 return;
             }
         }
 
-        route.trigger(netChannel, NetEvent.READ_EXCEPTION, cause);
+        route.trigger(ctx, NetEvent.READ_EXCEPTION, cause);
         ctx.close();
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        route.trigger(netChannel, NetEvent.DISCONNECTED, null);
+        route.trigger(ctx, NetEvent.DISCONNECTED, null);
         super.channelInactive(ctx);
     }
 
     @Override
     public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
         if (ctx.channel().isWritable()) {
-            route.trigger(netChannel, NetEvent.HIGH_WATER_WRITEABLE, null);
+            route.trigger(ctx, NetEvent.HIGH_WATER_WRITEABLE, null);
         } else {
-            route.trigger(netChannel, NetEvent.HIGH_WATER_UNWRITEABLE, null);
+            route.trigger(ctx, NetEvent.HIGH_WATER_UNWRITEABLE, null);
         }
         super.channelWritabilityChanged(ctx);
     }
