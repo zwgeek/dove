@@ -25,8 +25,13 @@ public class HttpStarter extends Starter {
         return action;
     }
 
-    public static NetStream initStream(IFilter filter, IRoute route) {
-        HttpChannelInitializer httpChannelInitializer = new HttpChannelInitializer(filter, route);
+    public static NetStream initStream(String cert, IFilter filter, IRoute route) {
+        HttpChannelInitializer httpChannelInitializer;
+        if (cert == null) {
+            httpChannelInitializer = new HttpChannelInitializer(filter, route);
+        } else {
+            httpChannelInitializer = new HttpsChannelInitializer(filter, route);
+        }
         NetStream stream = new NetStream(httpChannelInitializer, (NioEventLoopGroup)Starter.eventLoopGroup);
 
         HttpClient.setStream(stream);
@@ -44,8 +49,11 @@ public class HttpStarter extends Starter {
 
         HttpChannelAction action = HttpStarter.initAction(filter, route);
 
-        if (properties.getProperty("http.work.cost") != null) {
-            action.addFilter(new CostFilter());
+        if (properties.getProperty("http.filter.list") != null) {
+            String[] filternames = properties.getProperty("http.filter.list").split("\\|");
+            for (String filtername : filternames) {
+                action.addFilter((IFilter) Class.forName(filtername).newInstance());
+            }
         }
 
         Class clz;
@@ -63,7 +71,7 @@ public class HttpStarter extends Starter {
             }
         }
         Starter.eventLoopGroup = new NioEventLoopGroup(Integer.valueOf(properties.getProperty("http.work.thread")));
-        HttpStarter.initStream(filter, route).listen(properties.getProperty("http.addr.ip"), Integer.valueOf(properties.getProperty("http.addr.port")));
+        HttpStarter.initStream(properties.getProperty("http.ssl.cert"), filter, route).listen(properties.getProperty("http.addr.ip"), Integer.valueOf(properties.getProperty("http.addr.port")));
     }
 
     @Override

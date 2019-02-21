@@ -8,13 +8,13 @@ public class CostFilter implements IFilter {
     public static final Logger logger = LogManager.getLogger(CostFilter.class);
 
     @Override
-    public Object onFilterIn(Object context, Object msg) {
+    public Object onFilterIn(Object context, Object msg) throws Exception {
         NetSessionContext.putAttribute(context, NetSessionContext.SCOPE_REQUEST, "CostTime", System.currentTimeMillis());
         return msg;
     }
 
     @Override
-    public Object onFilterOut(Object context, Object msg) {
+    public Object onFilterOut(Object context, Object msg) throws Exception {
         Long time = (Long)NetSessionContext.getAttribute(context, NetSessionContext.SCOPE_REQUEST, "CostTime");
         logger.debug("[msg cost time] => {} : {} ms", msg, System.currentTimeMillis() - time);
         return msg;

@@ -6,7 +6,7 @@ import zg.dove.http.HttpRequest;
 public class BrowserFilter implements IFilter {
 
     @Override
-    public Object onFilterIn(Object context, Object msg) {
+    public Object onFilterIn(Object context, Object msg) throws Exception {
         HttpRequest request = (HttpRequest) msg;
         //去除浏览器"/favicon.ico"的干扰
         if(request.uri().equals("/favicon.ico")){
@@ -16,7 +16,7 @@ public class BrowserFilter implements IFilter {
     }
 
     @Override
-    public Object onFilterOut(Object context, Object msg) {
+    public Object onFilterOut(Object context, Object msg) throws Exception {
         return msg;
     }
 

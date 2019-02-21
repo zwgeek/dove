@@ -4,6 +4,7 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
+import io.netty.handler.ssl.SslHandshakeCompletionEvent;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.ReferenceCountUtil;
 import org.apache.logging.log4j.LogManager;
@@ -94,13 +95,17 @@ public class NetChannelHandler extends ChannelHandlerAdapter {
                     route.trigger(ctx, NetEvent.ALL_IDLE_TIMEOUT, null);
                     break;
                 default:
-                    logger.warn("unknown event {}:{}", evt.getClass().getName(), evt);
+                    logger.warn("unknown event : {}", evt);
                     break;
             }
             return;
         }
+        else if (evt instanceof SslHandshakeCompletionEvent) {
+            logger.debug("ssl handshake done");
+            return;
+        }
 
-        logger.warn("unknown event {}:{}", evt.getClass().getName(), evt);
+        logger.warn("unknown event : {}", evt);
     }
 
     @Override
@@ -114,7 +119,7 @@ public class NetChannelHandler extends ChannelHandlerAdapter {
             Object _cause = cause;
             cause = filter.onFilterException(ctx, cause);
             if (cause == null) {
-                logger.debug("msg filtered:{}", _cause.getClass().getName());
+                logger.debug("msg filtered : {}", _cause);
                 return;
             }
         }

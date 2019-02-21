@@ -1,6 +1,7 @@
 package zg.dove.http;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.handler.codec.AsciiString;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpMethod;
@@ -25,7 +26,11 @@ public class HttpRequest {
         return request;
     }
 
-    public void setHeader(CharSequence key, CharSequence value) {
+    public void setHeader(String key, CharSequence value) {
+        this.request.headers().set(new AsciiString(key), value);
+    }
+
+    public void setHeader(AsciiString key, CharSequence value) {
         this.request.headers().set(key, value);
     }
 

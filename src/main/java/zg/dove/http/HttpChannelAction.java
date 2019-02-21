@@ -5,8 +5,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import zg.dove.filter.DupFilter;
 import zg.dove.filter.IFilter;
-import zg.dove.http.filter.BrowserFilter;
-import zg.dove.http.filter.HttpStatusFilter;
 import zg.dove.net.NetChannel;
 import zg.dove.net.NetChannelAction;
 import zg.dove.net.NetEvent;
@@ -42,14 +40,9 @@ public class HttpChannelAction extends NetChannelAction {
             HttpResponse response = (HttpResponse)NetSessionContext.getAttribute(from, NetSessionContext.SCOPE_REQUEST, HttpResponse.class);
             //NetSessionContext.putAttribute(from, NetSessionContext.SCOPE_REQUEST, msg.getClass(), msg);
 
-            try {
-                boolean bool = _route.trigger(from, request.uri(), msg, response);
-                if (bool) {
-                    NetChannel.writeAndFlush(from, response);
-                }
-            } catch (Exception e) {
-                logger.error("http msg event exception", e);
-                throw new HttpException(e);
+            boolean bool = _route.trigger(from, request.uri(), msg, response);
+            if (bool) {
+                NetChannel.writeAndFlushAndClose(from, response);
             }
 
             return null;
@@ -63,8 +56,6 @@ public class HttpChannelAction extends NetChannelAction {
             return;
         }
         super.initFilter(filter);
-        this.addFilter(new BrowserFilter());
-        this.addFilter(new HttpStatusFilter());
     }
 
     public void register(String method, String url, RefRoute.Callback<HttpRequest, HttpResponse> cb) {

@@ -15,7 +15,7 @@ public class DupFilter implements IFilter<Object, Object> {
     }
 
     @Override
-    public Object onFilterIn(Object context, Object msg) {
+    public Object onFilterIn(Object context, Object msg) throws Exception {
         for (IFilter<Object, Object> filter : filters) {
             msg = filter.onFilterIn(context, msg);
             if (msg == null) {
@@ -26,7 +26,7 @@ public class DupFilter implements IFilter<Object, Object> {
     }
 
     @Override
-    public Object onFilterOut(Object context, Object msg) {
+    public Object onFilterOut(Object context, Object msg) throws Exception {
         for (int i = filters.size() - 1; i >= 0; i--) {
             IFilter<Object, Object> filter = filters.get(i);
             msg = filter.onFilterOut(context, msg);

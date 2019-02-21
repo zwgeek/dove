@@ -23,13 +23,9 @@ public class NetChannelAction {
             NetSessionContext.removeAttribute(from, NetSessionContext.SCOPE_REQUEST);
             NetSessionContext.putAttribute(from, NetSessionContext.SCOPE_REQUEST, msg.getClass(), msg);
 
-            try {
-                response = route.trigger(from, msg.getClass(), msg);
-                if (response != null) {
-                    NetChannel.writeAndFlush(from, response);
-                }
-            } catch (Exception e) {
-                logger.error("net msg event exception", e);
+            response = route.trigger(from, msg.getClass(), msg);
+            if (response != null) {
+                NetChannel.writeAndFlush(from, response);
             }
 
             return null;
@@ -94,6 +90,16 @@ public class NetChannelAction {
                 logger.debug("connection all idle");
                 NetChannel.close(from);
             }
+            return null;
+        });
+
+        this.route.register(NetEvent.HIGH_WATER_WRITEABLE, (from, key, msg) -> {
+            logger.debug("high water writeable");
+            return null;
+        });
+
+        this.route.register(NetEvent.HIGH_WATER_UNWRITEABLE, (from, key, msg) -> {
+            logger.debug("high water unwriteable");
             return null;
         });
     }

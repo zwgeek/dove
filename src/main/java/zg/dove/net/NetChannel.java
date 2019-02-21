@@ -24,6 +24,15 @@ public class NetChannel {
         context.handler().write(context, msg, future);
         context.handler().flush(context);
         future.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+        return future;
+    }
+
+    public static ChannelFuture writeAndFlushAndClose(Object channelHandlerContext, Object msg) throws Exception {
+        ChannelHandlerContext context = ((ChannelHandlerContext)channelHandlerContext);
+        ChannelPromise future = context.newPromise();
+        context.handler().write(context, msg, future);
+        context.handler().flush(context);
+        future.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
         future.addListener(ChannelFutureListener.CLOSE);
         return future;
     }
@@ -56,5 +65,9 @@ public class NetChannel {
      */
     public static InetSocketAddress localAddress(Object channelHandlerContext) {
         return (InetSocketAddress) ((ChannelHandlerContext)channelHandlerContext).channel().localAddress();
+    }
+
+    public static void exceptionCaught(Object channelHandlerContext, Throwable cause) {
+        ((ChannelHandlerContext)channelHandlerContext).fireExceptionCaught(cause);
     }
 }

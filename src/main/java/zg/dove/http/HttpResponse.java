@@ -1,6 +1,7 @@
 package zg.dove.http;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.handler.codec.AsciiString;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -31,7 +32,11 @@ public class HttpResponse  {
         this.response.setStatus(HttpResponseStatus.valueOf(statusCode));
     }
 
-    public void setHeader(CharSequence key, CharSequence value) {
+    public void setHeader(String key, CharSequence value) {
+        this.response.headers().set(new AsciiString(key), value);
+    }
+
+    public void setHeader(AsciiString key, CharSequence value) {
         this.response.headers().set(key, value);
     }
 
@@ -41,6 +46,10 @@ public class HttpResponse  {
 
     public void write(byte[] bytes) {
         this.response.content().writeBytes(bytes);
+    }
+
+    public void write(byte[] bytes, int srcIndex, int length) {
+        this.response.content().writeBytes(bytes, srcIndex, length);
     }
 
     public void write(String msg) {

@@ -8,7 +8,7 @@ public interface IFilter<I, O> {
      * @param msg
      * @return
      */
-    I onFilterIn(Object context, I msg);
+    I onFilterIn(Object context, I msg) throws Exception;
 
     /**
      * 输出过滤, 传递过滤后的数据
@@ -16,7 +16,7 @@ public interface IFilter<I, O> {
      * @param msg
      * @return
      */
-    O onFilterOut(Object context, O msg);
+    O onFilterOut(Object context, O msg) throws Exception;
 
     /**
      * 异常过滤, 处理异常链
