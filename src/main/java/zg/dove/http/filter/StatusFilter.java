@@ -1,6 +1,7 @@
 package zg.dove.http.filter;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.ssl.NotSslRecordException;
 import zg.dove.filter.IFilter;
 import zg.dove.http.HttpResponse;
 import zg.dove.net.NetChannel;
@@ -22,8 +23,12 @@ public class StatusFilter implements IFilter {
 
     @Override
     public Throwable onFilterException(Object context, Throwable t) {
+        if (t instanceof NotSslRecordException) {
+            return t;
+        }
+
         HttpResponse response = (HttpResponse)NetSessionContext.getAttribute(context, NetSessionContext.SCOPE_REQUEST, HttpResponse.class);
-        if (t.getCause() instanceof IRoute.NoRouteToLogicException || t.getCause() instanceof NoSuchFileException) {
+        if (t instanceof IRoute.NoRouteToLogicException || t instanceof NoSuchFileException) {
             response.setStatus(HttpResponseStatus.NOT_FOUND.code());
         }
         else {

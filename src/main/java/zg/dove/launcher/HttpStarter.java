@@ -1,18 +1,21 @@
 package zg.dove.launcher;
 
 import io.netty.channel.nio.NioEventLoopGroup;
-import zg.dove.filter.CostFilter;
 import zg.dove.filter.DupFilter;
 import zg.dove.filter.IFilter;
 import zg.dove.http.*;
+import zg.dove.net.NetStream;
 import zg.dove.route.DefaultRoute;
 import zg.dove.route.IRoute;
-import zg.dove.net.NetStream;
 import zg.dove.utils.Assert;
 import zg.dove.utils.ClzParse;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import java.io.FileInputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.security.KeyStore;
 import java.util.Properties;
 
 public class HttpStarter extends Starter {
@@ -25,12 +28,20 @@ public class HttpStarter extends Starter {
         return action;
     }
 
-    public static NetStream initStream(String cert, IFilter filter, IRoute route) {
+    public static NetStream initStream(String enable, String keystore, String password, IFilter filter, IRoute route) throws Exception {
         HttpChannelInitializer httpChannelInitializer;
-        if (cert == null) {
+        if (enable == null || enable.equals("0")) {
             httpChannelInitializer = new HttpChannelInitializer(filter, route);
         } else {
-            httpChannelInitializer = new HttpsChannelInitializer(filter, route);
+            Assert.verify(keystore != null);
+            Assert.verify(password != null);
+            KeyStore ks = KeyStore.getInstance("JKS");
+            ks.load(new FileInputStream(HttpStarter.class.getClassLoader().getResource(keystore).getPath()), password.toCharArray());
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+            kmf.init(ks, password.toCharArray());
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(kmf.getKeyManagers(), null, null);
+            httpChannelInitializer = new HttpsChannelInitializer(sslContext, filter, route);
         }
         NetStream stream = new NetStream(httpChannelInitializer, (NioEventLoopGroup)Starter.eventLoopGroup);
 
@@ -71,7 +82,8 @@ public class HttpStarter extends Starter {
             }
         }
         Starter.eventLoopGroup = new NioEventLoopGroup(Integer.valueOf(properties.getProperty("http.work.thread")));
-        HttpStarter.initStream(properties.getProperty("http.ssl.cert"), filter, route).listen(properties.getProperty("http.addr.ip"), Integer.valueOf(properties.getProperty("http.addr.port")));
+        HttpStarter.initStream(properties.getProperty("http.ssl.enable"), properties.getProperty("http.ssl.keystore"), properties.getProperty("http.ssl.password"), filter, route)
+                .listen(properties.getProperty("http.addr.ip"), Integer.valueOf(properties.getProperty("http.addr.port")));
     }
 
     @Override

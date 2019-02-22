@@ -139,6 +139,6 @@ public class FileFilter implements IFilter {
 
     @Override
     public Throwable onFilterException(Object context, Throwable t) {
-        return null;
+        return t;
     }
 }

@@ -41,7 +41,7 @@ public class NetChannelHandler extends ChannelHandlerAdapter {
             if (filter != null) {
                 _msg = filter.onFilterIn(ctx, _msg);
                 if (_msg == null) {
-                    logger.debug("msg filtered : {}", msg);
+                    logger.debug("recv filtered : {}", msg);
                     ReferenceCountUtil.release(msg);
                     return;
                 }
@@ -65,7 +65,7 @@ public class NetChannelHandler extends ChannelHandlerAdapter {
             Object _msg = msg;
             msg = filter.onFilterOut(ctx, msg);
             if (msg == null) {
-                logger.debug("msg filtered : {}", _msg);
+                logger.debug("send filtered : {}", _msg);
                 return;
             }
         }
@@ -114,16 +114,16 @@ public class NetChannelHandler extends ChannelHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.warn("exception caught ", cause);
         if (filter != null) {
             Object _cause = cause;
             cause = filter.onFilterException(ctx, cause);
             if (cause == null) {
-                logger.debug("msg filtered : {}", _cause);
+                logger.debug("exception filtered : {}", _cause);
                 return;
             }
         }
 
+        logger.warn("exception caught : {}", cause);
         route.trigger(ctx, NetEvent.READ_EXCEPTION, cause);
         ctx.close();
     }
