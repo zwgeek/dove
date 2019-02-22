@@ -14,7 +14,7 @@ public @interface BeanHttp {
      * 路由url
      * @return
      */
-    String url();
+    String path();
 
     /*
      * 路由方法, 这边默认写死了, 注意一下

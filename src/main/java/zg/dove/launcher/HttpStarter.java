@@ -65,7 +65,7 @@ public class HttpStarter extends Starter {
                 if (Modifier.isStatic(method.getModifiers())) {
                     BeanHttp beanHttp = method.getAnnotation(BeanHttp.class);
                     if (beanHttp == null) continue;
-                    action.register(beanHttp.method(), beanHttp.url(),
+                    action.register(beanHttp.method(), beanHttp.path(),
                         (request, response) -> { method.invoke(null, request, response); return true; });
                 }
             }

@@ -32,6 +32,14 @@ public class HttpResponse  {
         this.response.setStatus(HttpResponseStatus.valueOf(statusCode));
     }
 
+    public CharSequence getHeader(String key) {
+        return this.response.headers().get(new AsciiString(key));
+    }
+
+    public CharSequence getHeader(AsciiString key) {
+        return this.response.headers().get(key);
+    }
+
     public void setHeader(String key, CharSequence value) {
         this.response.headers().set(new AsciiString(key), value);
     }

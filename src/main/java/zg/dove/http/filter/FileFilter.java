@@ -16,7 +16,7 @@ import java.util.Map;
 
 public class FileFilter implements IFilter {
     public static final Logger logger = LogManager.getLogger(FileFilter.class);
-    private static final String PATH = System.getProperty("user.dir");
+    private static final String DIR = System.getProperty("user.dir");
     private static Map<String, String> CONTENT_TYPES = new HashMap<>();
     static {
         CONTENT_TYPES.put("awf", "application/vnd.adobe.workflow");
@@ -98,7 +98,7 @@ public class FileFilter implements IFilter {
             return request;
         }
 
-        String[] units = request.uri().split("\\.");
+        String[] units = request.path().split("\\.");
         if (units.length <= 1) {
             return request;
         }
@@ -109,7 +109,7 @@ public class FileFilter implements IFilter {
         }
 
         ByteBuffer buffer = ByteBuffer.allocate(HttpChannelConfig.MAX_FILE_LENGTH);
-        AsynchronousFileChannel.open(Paths.get(PATH + request.uri())).read(buffer, 0, "async file",
+        AsynchronousFileChannel.open(Paths.get(DIR + request.path())).read(buffer, 0, "async file",
             new CompletionHandler<Integer, Object>() {
                 @Override
                 public void completed(Integer readCount, Object attachment) {
