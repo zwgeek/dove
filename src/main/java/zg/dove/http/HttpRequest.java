@@ -71,7 +71,7 @@ public class HttpRequest {
         return this.content;
     }
 
-    public void parse(Object content) {
+    public void build(Object content) {
         this.content = content;
     }
 

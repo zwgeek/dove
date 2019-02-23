@@ -42,7 +42,7 @@ public class ContentFilter implements IFilter {
                     }
                 }
             }
-            request.parse(content);
+            request.build(content);
         }
 
         return request;
