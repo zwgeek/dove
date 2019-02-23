@@ -34,7 +34,6 @@ public class FileFilter implements IFilter {
         CONTENT_TYPES.put("png", "image/png");
         CONTENT_TYPES.put("jpg", "image/jpeg");
         CONTENT_TYPES.put("jfif", "image/jpeg");
-        CONTENT_TYPES.put("tif", "image/tiff");
 
         CONTENT_TYPES.put("aifc", "audio/aiff");
         CONTENT_TYPES.put("la1", "audio/x-liquid-file");

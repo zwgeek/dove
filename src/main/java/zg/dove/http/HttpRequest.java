@@ -3,6 +3,8 @@ package zg.dove.http;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.AsciiString;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
+import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 import io.netty.util.CharsetUtil;
 
 import java.util.List;
@@ -71,5 +73,9 @@ public class HttpRequest {
 
     public void parse(Object content) {
         this.content = content;
+    }
+
+    public List<InterfaceHttpData> from() {
+        return new HttpPostRequestDecoder(this.request).getBodyHttpDatas();
     }
 }

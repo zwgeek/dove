@@ -2,14 +2,10 @@ package zg.dove.http;
 
 import io.netty.channel.Channel;
 import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.SslHandler;
-import io.netty.handler.ssl.util.SelfSignedCertificate;
 import zg.dove.filter.IFilter;
 import zg.dove.route.IRoute;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
-import java.security.KeyStore;
+import java.io.File;
 
 /**
  * http1.1 ssl初始化
@@ -18,17 +14,16 @@ import java.security.KeyStore;
  */
 public class HttpsChannelInitializer extends HttpChannelInitializer {
 
-    private final SSLEngine sslEngine;
+    private final SslContext sslContext;
 
-    public HttpsChannelInitializer(SSLContext sslContext, IFilter filter, IRoute route) {
+    public HttpsChannelInitializer(File cert, File key, String password, IFilter filter, IRoute route) throws Exception {
         super(filter, route);
-        this.sslEngine = sslContext.createSSLEngine();
-        this.sslEngine.setUseClientMode(false);
+        this.sslContext = SslContext.newServerContext(cert, key, password);
     }
 
     @Override
     protected void initChannel(Channel channel) throws Exception {
-        channel.pipeline().addLast(new SslHandler(this.sslEngine));
+        channel.pipeline().addLast("ssl", this.sslContext.newHandler(channel.alloc()));
 
         super.initChannel(channel);
     }

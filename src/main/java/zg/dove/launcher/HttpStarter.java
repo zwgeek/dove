@@ -10,12 +10,9 @@ import zg.dove.route.IRoute;
 import zg.dove.utils.Assert;
 import zg.dove.utils.ClzParse;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import java.io.FileInputStream;
+import java.io.File;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.security.KeyStore;
 import java.util.Properties;
 
 public class HttpStarter extends Starter {
@@ -28,20 +25,17 @@ public class HttpStarter extends Starter {
         return action;
     }
 
-    public static NetStream initStream(String enable, String keystore, String password, IFilter filter, IRoute route) throws Exception {
+    public static NetStream initStream(String enable, String cert, String key, String password, IFilter filter, IRoute route) throws Exception {
         HttpChannelInitializer httpChannelInitializer;
         if (enable == null || enable.equals("0")) {
             httpChannelInitializer = new HttpChannelInitializer(filter, route);
         } else {
-            Assert.verify(keystore != null);
-            Assert.verify(password != null);
-            KeyStore ks = KeyStore.getInstance("JKS");
-            ks.load(new FileInputStream(HttpStarter.class.getClassLoader().getResource(keystore).getPath()), password.toCharArray());
-            KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-            kmf.init(ks, password.toCharArray());
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(kmf.getKeyManagers(), null, null);
-            httpChannelInitializer = new HttpsChannelInitializer(sslContext, filter, route);
+            Assert.verify(cert != null);
+            Assert.verify(key != null);
+
+            httpChannelInitializer = new HttpsChannelInitializer(
+                    new File(HttpStarter.class.getClassLoader().getResource(cert).getPath()), new File(HttpStarter.class.getClassLoader().getResource(key).getPath()),
+                    password, filter, route);
         }
         NetStream stream = new NetStream(httpChannelInitializer, (NioEventLoopGroup)Starter.eventLoopGroup);
 
@@ -82,7 +76,8 @@ public class HttpStarter extends Starter {
             }
         }
         Starter.eventLoopGroup = new NioEventLoopGroup(Integer.valueOf(properties.getProperty("http.work.thread")));
-        HttpStarter.initStream(properties.getProperty("http.ssl.enable"), properties.getProperty("http.ssl.keystore"), properties.getProperty("http.ssl.password"), filter, route)
+        HttpStarter.initStream(properties.getProperty("http.ssl.enable"), properties.getProperty("http.ssl.cert"),
+                properties.getProperty("http.ssl.key"), properties.getProperty("http.ssl.password"), filter, route)
                 .listen(properties.getProperty("http.addr.ip"), Integer.valueOf(properties.getProperty("http.addr.port")));
     }
 
