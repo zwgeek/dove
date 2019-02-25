@@ -133,6 +133,11 @@ public class FileFilter implements IFilter {
 
     @Override
     public Object onFilterOut(Object context, Object msg) throws Exception {
+//        HttpResponse response = (HttpResponse) msg;
+//        if (response.content() instanceof ByteBuffer) {
+//            ByteBuffer buffer = (ByteBuffer)response.content();
+//            response.write(buffer.array(), 0, buffer.position());
+//        }
         return msg;
     }
 

@@ -66,9 +66,9 @@ public class Launch {
             Assert.verify(properties.getProperty("common.launch.starter") != null);
             Assert.verify(properties.getProperty("common.package") != null);
 
-            //映射启动
-            Class<?> clz = Class.forName(properties.getProperty("common.launch.starter"));
-            Starter starter = (Starter)clz.getDeclaredConstructor().newInstance();
+
+            Class<?> clz;
+            Starter starter;
 
             String[] clznames = ClzParse.findClassesByPackage(properties.getProperty("common.package"),
                     ClzParse.EMPTY_LIST, ClzParse.EMPTY_LIST);
@@ -81,6 +81,9 @@ public class Launch {
                 starter.start(properties);
             }
 
+            //映射启动
+            clz = Class.forName(properties.getProperty("common.launch.starter"));
+            starter = (Starter)clz.getDeclaredConstructor().newInstance();
             starter.start(properties);
         }
     }

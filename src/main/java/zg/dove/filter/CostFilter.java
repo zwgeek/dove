@@ -15,7 +15,7 @@ public class CostFilter implements IFilter {
 
     @Override
     public Object onFilterOut(Object context, Object msg) throws Exception {
-        Long time = (Long)NetSessionContext.getAttribute(context, NetSessionContext.SCOPE_REQUEST, "CostTime");
+        long time = (long)NetSessionContext.getAttribute(context, NetSessionContext.SCOPE_REQUEST, "CostTime");
         logger.debug("[msg cost time] => {} : {} ms", msg, System.currentTimeMillis() - time);
         return msg;
     }

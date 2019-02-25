@@ -28,11 +28,11 @@ public class HttpRequest {
     }
 
     protected HttpRequest(HttpVersion httpVersion, HttpMethod method, String uri) {
-        this.request = new DefaultFullHttpRequest(httpVersion, method, uri);
+        this(new DefaultFullHttpRequest(httpVersion, method, uri));
     }
 
     protected HttpRequest(HttpVersion httpVersion, HttpMethod method, String uri, ByteBuf content) {
-        this.request = new DefaultFullHttpRequest(httpVersion, method, uri, content);
+        this(new DefaultFullHttpRequest(httpVersion, method, uri, content));
     }
 
     protected FullHttpRequest getRequest() {

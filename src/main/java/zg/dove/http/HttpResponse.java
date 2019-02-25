@@ -12,16 +12,19 @@ import java.io.UnsupportedEncodingException;
 public class HttpResponse  {
     private final FullHttpResponse response;
 
+    private Object content;
+
     protected HttpResponse(FullHttpResponse response) {
         this.response = response;
+        this.content = response.content();
     }
 
     protected HttpResponse(HttpVersion version, HttpResponseStatus status) {
-        this.response = new DefaultFullHttpResponse(version, status);
+        this(new DefaultFullHttpResponse(version, status));
     }
 
     protected HttpResponse(HttpVersion version, HttpResponseStatus status, ByteBuf content) {
-        this.response = new DefaultFullHttpResponse(version, status, content);
+        this(new DefaultFullHttpResponse(version, status, content));
     }
 
     protected FullHttpResponse getResponse() {
@@ -52,6 +55,10 @@ public class HttpResponse  {
         return this.response.content().readableBytes();
     }
 
+    public Object content() {
+        return this.content;
+    }
+
     public void write(byte[] bytes) {
         this.response.content().writeBytes(bytes);
     }
@@ -60,11 +67,7 @@ public class HttpResponse  {
         this.response.content().writeBytes(bytes, srcIndex, length);
     }
 
-    public void write(String msg) {
-        try {
-            this.response.content().writeBytes(msg.getBytes("utf-8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+    public void write(Object msg) {
+        this.content = msg;
     }
 }
