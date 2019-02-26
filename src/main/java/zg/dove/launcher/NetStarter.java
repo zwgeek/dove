@@ -66,7 +66,7 @@ public class NetStarter extends Starter {
                     BeanNet beanNet = method.getAnnotation(BeanNet.class);
                     if (beanNet == null) continue;
                     action.register(beanNet.key(),
-                        (channel, msgClz, msg) -> { return method.invoke(null, Arrays.asList(channel, msgClz, msg)); });
+                        (context, msgClz, msg) -> method.invoke(null, context, msgClz, msg));
                 }
             }
         }

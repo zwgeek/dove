@@ -45,7 +45,7 @@ public class HttpClient {
         HttpClient.connect(BeanHttp.Method.GET, ip, port, msg);
     }
 
-    public static void get(String ip, int port, String msg, RefRoute.Callback<HttpRequest, HttpResponse> cb) throws Exception {
+    public static void get(String ip, int port, String msg, RefRoute.Callback cb) throws Exception {
         HttpClient.connect(BeanHttp.Method.GET, ip, port, msg, cb);
     }
 
@@ -53,7 +53,7 @@ public class HttpClient {
         HttpClient.connect(BeanHttp.Method.POST, ip, port, msg);
     }
 
-    public static void post(String ip, int port, String msg, RefRoute.Callback<HttpRequest, HttpResponse> cb) throws Exception {
+    public static void post(String ip, int port, String msg, RefRoute.Callback cb) throws Exception {
         HttpClient.connect(BeanHttp.Method.GET, ip, port, msg, cb);
     }
 
@@ -68,13 +68,13 @@ public class HttpClient {
         });
     }
 
-    public static void connect(String method, String ip, int port, String msg, RefRoute.Callback<HttpRequest, HttpResponse> cb) throws Exception {
+    public static void connect(String method, String ip, int port, String msg, RefRoute.Callback cb) throws Exception {
         HttpClient.connect(method, ip, port, msg);
 
         HttpChannelAction _action = HttpClient.getAction();
 
-        _action.register(method, ip, (request, response) -> {
-            cb.call(request, response);
+        _action.register(method, ip, (context, request, response) -> {
+            cb.call(context, request, response);
             _action.cancel(method, ip);
             return false;
         });

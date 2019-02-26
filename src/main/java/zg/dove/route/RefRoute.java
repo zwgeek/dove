@@ -11,21 +11,21 @@ import java.util.Map;
  * @param <RV>
  */
 public class RefRoute<FROM, KEY, DATA, RV> {
-    private Map<Object, Callback<DATA, RV>> keyRoutes = new HashMap<>();
-    private Callback<DATA, RV> defaultRoutes = null;
+    private Map<Object, Callback<FROM, DATA, RV>> keyRoutes = new HashMap<>();
+    private Callback<FROM, DATA, RV> defaultRoutes = null;
 
-    public boolean trigger(FROM from, KEY key, DATA data, RV result) throws Exception {
-        Callback<DATA, RV> fcb = keyRoutes.get(key);
+    public Object trigger(FROM from, KEY key, DATA data, RV result) throws Exception {
+        Callback<FROM, DATA, RV> fcb = keyRoutes.get(key);
         if (fcb != null) {
-            return fcb.call(data, result);
+            return fcb.call(from, data, result);
         } else if (defaultRoutes != null) {
-            return defaultRoutes.call(data, result);
+            return defaultRoutes.call(from, data, result);
         } else {
             throw new IRoute.NoRouteToLogicException();
         }
     }
 
-    public void register(KEY key, Callback<DATA, RV> cb) {
+    public void register(KEY key, Callback<FROM, DATA, RV> cb) {
         if (key == null) {
             if (defaultRoutes != null) {
                 throw new RuntimeException("duplicate default process");
@@ -58,7 +58,7 @@ public class RefRoute<FROM, KEY, DATA, RV> {
      * 事件回调函数 FROM, KEY,
      */
     @FunctionalInterface
-    public interface Callback<DATA, RV> {
-        boolean call(DATA data, RV result) throws Exception;
+    public interface Callback<FROM, DATA, RV> {
+        Object call(FROM from, DATA data, RV result) throws Exception;
     }
 }

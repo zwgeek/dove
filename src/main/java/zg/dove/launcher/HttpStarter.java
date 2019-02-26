@@ -71,7 +71,7 @@ public class HttpStarter extends Starter {
                     BeanHttp beanHttp = method.getAnnotation(BeanHttp.class);
                     if (beanHttp == null) continue;
                     action.register(beanHttp.method(), beanHttp.path(),
-                        (request, response) -> { method.invoke(null, request, response); return true; });
+                        (context, request, response) -> method.invoke(null, context, request, response));
                 }
             }
         }
