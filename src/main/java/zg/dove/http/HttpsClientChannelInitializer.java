@@ -12,11 +12,11 @@ import java.io.File;
  * @author PaPa
  * @create 2018-11-28
  */
-public class HttpsChannelInitializer extends HttpChannelInitializer {
+public class HttpsClientChannelInitializer extends HttpClientChannelInitializer {
 
     private final SslContext sslContext;
 
-    public HttpsChannelInitializer(File cert, File key, String password, IFilter filter, IRoute route) throws Exception {
+    public HttpsClientChannelInitializer(File cert, File key, String password, IFilter filter, IRoute route) throws Exception {
         super(filter, route);
         this.sslContext = SslContext.newServerContext(cert, key, password);
     }

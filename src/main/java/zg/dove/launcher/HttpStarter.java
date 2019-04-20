@@ -26,18 +26,24 @@ public class HttpStarter extends Starter {
     }
 
     public static NetStream initStream(String enable, String cert, String key, String password, IFilter filter, IRoute route) throws Exception {
-        HttpChannelInitializer httpChannelInitializer;
+        HttpServerChannelInitializer httpServerChannelInitializer;
+        HttpClientChannelInitializer httpClientChannelInitializer;
         if (enable == null || enable.equals("0")) {
-            httpChannelInitializer = new HttpChannelInitializer(filter, route);
+            httpServerChannelInitializer = new HttpServerChannelInitializer(filter, route);
+            httpClientChannelInitializer = new HttpClientChannelInitializer(filter, route);
         } else {
             Assert.verify(cert != null);
             Assert.verify(key != null);
 
-            httpChannelInitializer = new HttpsChannelInitializer(
+            httpServerChannelInitializer = new HttpsServerChannelInitializer(
+                    new File(HttpStarter.class.getClassLoader().getResource(cert).getPath()), new File(HttpStarter.class.getClassLoader().getResource(key).getPath()),
+                    password, filter, route);
+
+            httpClientChannelInitializer = new HttpsClientChannelInitializer(
                     new File(HttpStarter.class.getClassLoader().getResource(cert).getPath()), new File(HttpStarter.class.getClassLoader().getResource(key).getPath()),
                     password, filter, route);
         }
-        NetStream stream = new NetStream(httpChannelInitializer, (NioEventLoopGroup)Starter.eventLoopGroup);
+        NetStream stream = new NetStream(httpServerChannelInitializer, httpClientChannelInitializer, (NioEventLoopGroup)Starter.eventLoopGroup);
 
         HttpClient.setStream(stream);
         return stream;

@@ -9,14 +9,25 @@ public class CostFilter implements IFilter {
 
     @Override
     public Object onFilterIn(Object context, Object msg) throws Exception {
-        NetSessionContext.putAttribute(context, NetSessionContext.SCOPE_REQUEST, "CostTime", System.currentTimeMillis());
+        Object time = NetSessionContext.getAttribute(context, NetSessionContext.SCOPE_REQUEST, "CostTime");
+        if (time == null) {
+            NetSessionContext.putAttribute(context, NetSessionContext.SCOPE_REQUEST, "CostTime", System.currentTimeMillis());
+        }
+        else {
+            logger.debug("[msg cost time] => {} : {} ms", msg, System.currentTimeMillis() - (long) time);
+        }
         return msg;
     }
 
     @Override
     public Object onFilterOut(Object context, Object msg) throws Exception {
-        long time = (long)NetSessionContext.getAttribute(context, NetSessionContext.SCOPE_REQUEST, "CostTime");
-        logger.debug("[msg cost time] => {} : {} ms", msg, System.currentTimeMillis() - time);
+        Object time = NetSessionContext.getAttribute(context, NetSessionContext.SCOPE_REQUEST, "CostTime");
+        if (time == null) {
+            NetSessionContext.putAttribute(context, NetSessionContext.SCOPE_REQUEST, "CostTime", System.currentTimeMillis());
+        }
+        else {
+            logger.debug("[msg cost time] => {} : {} ms", msg, System.currentTimeMillis() - (long) time);
+        }
         return msg;
     }
 

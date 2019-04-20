@@ -55,8 +55,12 @@ public class HttpResponse  {
         return this.response.content().readableBytes();
     }
 
-    public Object content() {
+    public Object getContent() {
         return this.content;
+    }
+
+    public void setContent(Object msg) {
+        this.content = msg;
     }
 
     public void write(byte[] bytes) {
@@ -67,7 +71,10 @@ public class HttpResponse  {
         this.response.content().writeBytes(bytes, srcIndex, length);
     }
 
-    public void write(Object msg) {
-        this.content = msg;
+    public void write(HttpResponse response) {
+        this.response.setStatus(response.getResponse().status());
+        this.response.content().writeBytes((ByteBuf) response.getContent());
     }
+
+
 }

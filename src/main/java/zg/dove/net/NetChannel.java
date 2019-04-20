@@ -14,7 +14,6 @@ public class NetChannel {
         ChannelHandlerContext context = ((ChannelHandlerContext)channelHandlerContext);
         ChannelPromise future = context.newPromise();
         context.handler().write(context, msg, future);
-        future.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
         return future;
     }
 
@@ -23,7 +22,6 @@ public class NetChannel {
         ChannelPromise future = context.newPromise();
         context.handler().write(context, msg, future);
         context.handler().flush(context);
-        future.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
         return future;
     }
 
@@ -32,7 +30,6 @@ public class NetChannel {
         ChannelPromise future = context.newPromise();
         context.handler().write(context, msg, future);
         context.handler().flush(context);
-        future.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
         future.addListener(ChannelFutureListener.CLOSE);
         return future;
     }

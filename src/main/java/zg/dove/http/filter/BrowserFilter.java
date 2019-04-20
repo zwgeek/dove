@@ -7,10 +7,12 @@ public class BrowserFilter implements IFilter {
 
     @Override
     public Object onFilterIn(Object context, Object msg) throws Exception {
-        HttpRequest request = (HttpRequest) msg;
-        //去除浏览器"/favicon.ico"的干扰
-        if(request.path().equals("/favicon.ico")){
-            return null;
+        if (msg instanceof HttpRequest) {
+            HttpRequest request = (HttpRequest) msg;
+            //去除浏览器"/favicon.ico"的干扰
+            if (request.path().equals("/favicon.ico")) {
+                return null;
+            }
         }
         return msg;
     }

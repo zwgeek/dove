@@ -40,7 +40,7 @@ public class HttpChannelAction extends NetChannelAction {
             HttpResponse response = (HttpResponse)NetSessionContext.getAttribute(from, NetSessionContext.SCOPE_REQUEST, HttpResponse.class);
             //NetSessionContext.putAttribute(from, NetSessionContext.SCOPE_REQUEST, msg.getClass(), msg);
 
-            Object bool = _route.trigger(from, request.path(), msg, response);
+            Object bool = _route.trigger(from, request.getId(), msg, response);
             if (bool != null) {
                 NetChannel.writeAndFlushAndClose(from, response);
             }

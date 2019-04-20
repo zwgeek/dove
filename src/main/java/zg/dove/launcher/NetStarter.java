@@ -30,7 +30,7 @@ public class NetStarter extends Starter {
 
     public static NetStream initStream(IFilter filter, IRoute route) {
         NetChannelInitializer netChannelInitializer = new NetChannelInitializer(filter, route);
-        NetStream stream = new NetStream(netChannelInitializer, (NioEventLoopGroup)Starter.eventLoopGroup);
+        NetStream stream = new NetStream(netChannelInitializer, netChannelInitializer, (NioEventLoopGroup)Starter.eventLoopGroup);
 
         NetClient.setStream(stream);
         return stream;

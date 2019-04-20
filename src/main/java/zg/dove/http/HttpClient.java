@@ -6,6 +6,7 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
+import zg.dove.net.NetChannel;
 import zg.dove.route.RefRoute;
 import zg.dove.net.NetStream;
 
@@ -36,8 +37,12 @@ public class HttpClient {
     }
 
     private static HttpRequest _createRequest(String method, String ip, String msg) throws Exception {
-        HttpRequest request = new HttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), ip, Unpooled.wrappedBuffer(msg.getBytes("utf-8")));
-        request.setHeader(HttpHeaderNames.CONTENT_TYPE, "text/plain;charset=utf-8");
+        byte[] bytes = msg.getBytes("utf-8");
+        HttpRequest request = new HttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), "/", Unpooled.wrappedBuffer(bytes));
+        request.setHeader(HttpHeaderNames.ACCEPT, "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+        request.setHeader(HttpHeaderNames.ACCEPT_LANGUAGE, "zh-CN");
+        request.setHeader(HttpHeaderNames.ACCEPT_ENCODING, "gzip, deflate");
+        request.setHeader(HttpHeaderNames.HOST, ip);
         return request;
     }
 
@@ -57,26 +62,28 @@ public class HttpClient {
         HttpClient.connect(BeanHttp.Method.GET, ip, port, msg, cb);
     }
 
-    public static void connect(String method, String ip, int port, String msg) throws Exception {
-        HttpClient.getStream().connect(ip, port, new ChannelFutureListener() {
-            @Override
-            public void operationComplete(ChannelFuture future) throws Exception {
-                if (future.isSuccess()) {
-                    future.channel().write(HttpClient._createRequest(method, ip, msg));
-                }
+    public static void connect(String method, String ip, int port, String msg, RefRoute.Callback cb) throws Exception {
+        HttpClient.getStream().connect(ip, port, (ChannelFutureListener) future -> {
+            if (future.isSuccess()) {
+                HttpRequest request = HttpClient._createRequest(method, ip, msg);
+                request.setId(future.channel().id().toString());
+                future.channel().write(request);
+                future.channel().flush();
+
+                HttpChannelAction _action = HttpClient.getAction();
+                String key = future.channel().id().toString();
+                _action.register(method, key, (context, _request, _response) -> {
+                    cb.call(context, _request, _response);
+                    _action.cancel(method, key);
+                    NetChannel.close(context);
+                    return null;
+                });
             }
         });
     }
 
-    public static void connect(String method, String ip, int port, String msg, RefRoute.Callback cb) throws Exception {
+    public static void connect(String method, String ip, int port, String msg) throws Exception {
         HttpClient.connect(method, ip, port, msg);
 
-        HttpChannelAction _action = HttpClient.getAction();
-
-        _action.register(method, ip, (context, request, response) -> {
-            cb.call(context, request, response);
-            _action.cancel(method, ip);
-            return false;
-        });
     }
 }

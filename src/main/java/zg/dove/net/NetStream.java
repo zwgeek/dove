@@ -20,12 +20,15 @@ import java.util.EventListener;
 public class NetStream implements INetStream {
     public static final Logger logger = LogManager.getLogger(NetStream.class);
 
-    private final ChannelInitializer channelInitializer;
+    private final ChannelInitializer serverChannelInitializer;
+    private final ChannelInitializer clientChannelInitializer;
     private final EventLoopGroup eventLoopGroup;
 
-    public NetStream(ChannelInitializer channelInitializer,
+    public NetStream(ChannelInitializer serverChannelInitializer,
+                     ChannelInitializer clientChannelInitializer,
                      EventLoopGroup eventLoopGroup) {
-        this.channelInitializer = channelInitializer;
+        this.serverChannelInitializer = serverChannelInitializer;
+        this.clientChannelInitializer = clientChannelInitializer;
         this.eventLoopGroup = eventLoopGroup;
     }
 
@@ -35,7 +38,7 @@ public class NetStream implements INetStream {
             serverBootstrap.group(eventLoopGroup);                   //线程池
             serverBootstrap.channel(NioServerSocketChannel.class);   //设置nio类型的channel
 
-            serverBootstrap.childHandler(channelInitializer)
+            serverBootstrap.childHandler(serverChannelInitializer)
                     .option(ChannelOption.SO_BACKLOG, 1024)
                     .option(ChannelOption.SO_REUSEADDR, true)
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
@@ -55,15 +58,17 @@ public class NetStream implements INetStream {
             Bootstrap bootstrap = new Bootstrap();
             bootstrap.group(eventLoopGroup).channel(NioSocketChannel.class)
                     .option(ChannelOption.TCP_NODELAY, true)
-                    .handler(channelInitializer);
+                    .handler(clientChannelInitializer);
             //发起异步连接操作
-            ChannelFuture future = bootstrap.connect(ip, port).sync();
-            future.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
-            future.addListener((ChannelFutureListener)listener);
+            ChannelFuture future = bootstrap.connect(ip, port);
+            future.addListener((ChannelFutureListener) listener);
 //            future.channel().closeFuture().sync();
-        } finally {
-            eventLoopGroup.shutdownGracefully().sync();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+//        finally {
+//            eventLoopGroup.shutdownGracefully().sync();
+//        }
         return true;
     }
 

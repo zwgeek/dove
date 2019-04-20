@@ -91,52 +91,57 @@ public class FileFilter implements IFilter {
 
     @Override
     public Object onFilterIn(Object context, Object msg) throws Exception {
-        HttpRequest request = (HttpRequest) msg;
+        if (msg instanceof HttpRequest) {
+            HttpRequest request = (HttpRequest) msg;
 
-        if (!request.method().equals(BeanHttp.Method.GET)) {
-            return request;
+            if (!request.method().equals(BeanHttp.Method.GET)) {
+                return request;
+            }
+
+            String[] units = request.path().split("\\.");
+            if (units.length <= 1) {
+                return request;
+            }
+
+            String contentType = CONTENT_TYPES.get(units[units.length - 1]);
+            if (contentType == null) {
+                return request;
+            }
+
+            ByteBuffer buffer = ByteBuffer.allocate(HttpChannelConfig.MAX_FILE_LENGTH);
+            AsynchronousFileChannel.open(Paths.get(DIR + request.path())).read(buffer, 0, "async file",
+                    new CompletionHandler<Integer, Object>() {
+                        @Override
+                        public void completed(Integer readCount, Object attachment) {
+                            HttpResponse response = (HttpResponse) NetSessionContext.getAttribute(context, NetSessionContext.SCOPE_REQUEST, HttpResponse.class);
+                            response.write(buffer.array(), 0, readCount);
+                            response.setHeader("content-type", contentType);
+                            try {
+                                NetChannel.writeAndFlushAndClose(context, response);
+                            } catch (Exception e) {
+                                logger.error(e);
+                            }
+                        }
+
+                        @Override
+                        public void failed(Throwable exc, Object attachment) {
+                            NetChannel.exceptionCaught(context, exc);
+                        }
+                    });
+
+            return null;
         }
-
-        String[] units = request.path().split("\\.");
-        if (units.length <= 1) {
-            return request;
-        }
-
-        String contentType = CONTENT_TYPES.get(units[units.length - 1]);
-        if (contentType == null) {
-            return request;
-        }
-
-        ByteBuffer buffer = ByteBuffer.allocate(HttpChannelConfig.MAX_FILE_LENGTH);
-        AsynchronousFileChannel.open(Paths.get(DIR + request.path())).read(buffer, 0, "async file",
-            new CompletionHandler<Integer, Object>() {
-                @Override
-                public void completed(Integer readCount, Object attachment) {
-                    HttpResponse response = (HttpResponse) NetSessionContext.getAttribute(context, NetSessionContext.SCOPE_REQUEST, HttpResponse.class);
-                    response.write(buffer.array(), 0, readCount);
-                    response.setHeader("content-type", contentType);
-                    try {
-                        NetChannel.writeAndFlushAndClose(context, response);
-                    } catch (Exception e) {
-                        logger.error(e);
-                    }
-                }
-
-                @Override
-                public void failed(Throwable exc, Object attachment) {
-                    NetChannel.exceptionCaught(context, exc);
-                }
-            });
-
-        return null;
+        return msg;
     }
 
     @Override
     public Object onFilterOut(Object context, Object msg) throws Exception {
-//        HttpResponse response = (HttpResponse) msg;
-//        if (response.content() instanceof ByteBuffer) {
-//            ByteBuffer buffer = (ByteBuffer)response.content();
-//            response.write(buffer.array(), 0, buffer.position());
+//        if (msg instanceof HttpResponse) {
+//            HttpResponse response = (HttpResponse) msg;
+//            if (response.content() instanceof ByteBuffer) {
+//                ByteBuffer buffer = (ByteBuffer)response.content();
+//                response.write(buffer.array(), 0, buffer.position());
+//            }
 //        }
         return msg;
     }

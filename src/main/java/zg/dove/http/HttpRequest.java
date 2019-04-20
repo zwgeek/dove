@@ -17,14 +17,17 @@ public class HttpRequest {
     private Map<String, List<String>> params;
     private Object content;
 
+    private String id;
+
     protected HttpRequest(FullHttpRequest request) {
         this.request = request;
 
         QueryStringDecoder queryDecoder = new QueryStringDecoder(this.request.uri());
         this.path = queryDecoder.path();
         this.params = queryDecoder.parameters();
-
         this.content = this.request.content().toString(CharsetUtil.UTF_8);
+
+        this.id = this.path;
     }
 
     protected HttpRequest(HttpVersion httpVersion, HttpMethod method, String uri) {
@@ -37,6 +40,14 @@ public class HttpRequest {
 
     protected FullHttpRequest getRequest() {
         return request;
+    }
+
+    protected String getId() {
+        return this.id;
+    }
+
+    protected void setId(String id) {
+        this.id = id;
     }
 
     public CharSequence getHeader(String key) {
